@@ -1,5 +1,6 @@
 package com.example.qrcodescanner.ui.ui.adapters
 
+import android.app.AlertDialog
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -14,47 +15,76 @@ import com.example.qrcodescanner.ui.ui.utils.toFormattedDisplay
 import com.example.qrcodescanner.ui.ui.utils.visible
 import kotlinx.android.synthetic.main.layout_single_item_qr_result.view.*
 
-class ScannedResultListAdapter(var dpDBHelperI: DBHelperI,
+class ScannedResultListAdapter(var dbHelperI: DBHelperI,
                                var context: Context,
                                var listOfScannedResults: MutableList<QrResult>
-):RecyclerView.Adapter<ScannedResultListAdapter.ScannedResultListViewHolder>() {
+    ):RecyclerView.Adapter<ScannedResultListAdapter.ScannedResultListViewHolder>() {
 
-   private var resultDialog = QrCodeResultDialog(context)
+    private var resultDialog = QrCodeResultDialog(context)
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ScannedResultListViewHolder {
         return ScannedResultListViewHolder(
-            LayoutInflater.from(context).inflate(R.layout.layout_single_item_qr_result,parent,false)
+            LayoutInflater.from(context).inflate(
+                R.layout.layout_single_item_qr_result,
+                parent,
+                false
+            )
         )
     }
 
     override fun getItemCount(): Int {
-      return listOfScannedResults.size
+        return listOfScannedResults.size
     }
 
     override fun onBindViewHolder(holder: ScannedResultListViewHolder, position: Int) {
-        holder.bind(listOfScannedResults[position],position)
+        holder.bind(listOfScannedResults[position], position)
     }
 
-    inner class ScannedResultListViewHolder(var view: View) : RecyclerView.ViewHolder(view){
-        fun bind(qrResult: QrResult,position:Int){
+    inner class ScannedResultListViewHolder(var view: View) : RecyclerView.ViewHolder(view) {
+        fun bind(qrResult: QrResult, position: Int) {
             view.result.text = qrResult.result
             view.tvTime.text = qrResult.calendar.toFormattedDisplay()
             setFavourite(qrResult.favourite)
-            onClicks(qrResult)
+            onClicks(qrResult, position)
         }
 
-        private fun onClicks(qrResult: QrResult){
-            view.setOnClickListener{
+        private fun onClicks(qrResult: QrResult, position: Int) {
+            view.setOnClickListener {
                 resultDialog.show(qrResult)
+            }
+            view.setOnLongClickListener {
+                showDeleteDialog(qrResult, position)
+                return@setOnLongClickListener true
             }
         }
 
+        private fun showDeleteDialog(qrResult: QrResult, position: Int) {
+            AlertDialog.Builder(context, R.style.CustomAlertDialog)
+                .setTitle("Delete")
+                .setMessage("Are You Really Want To Delete This Record?")
+                .setPositiveButton("Delete") { dialog, which ->
+                    deleteThisRecord(qrResult, position)
+                }
+                .setNegativeButton("Cancel") { dialog, which ->
+                    dialog.cancel()
+                }.show()
+        }
+
+        private fun deleteThisRecord(qrResult: QrResult, position: Int) {
+          dbHelperI.deleteQrResult(qrResult.id!!)
+          listOfScannedResults.removeAt(position)
+          notifyItemRemoved(position)
+        }
+
         private fun setFavourite(favourite: Boolean) {
-            if(favourite){
+            if (favourite) {
                 view.favouriteIcon.visible()
-            }else{
+            } else {
                 view.favouriteIcon.gone()
             }
 
         }
     }
 }
+
+
+

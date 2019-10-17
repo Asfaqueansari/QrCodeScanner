@@ -1,6 +1,7 @@
 package com.example.qrcodescanner.ui.ui.scanned_history
 
 
+import android.app.AlertDialog
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -57,7 +58,35 @@ class ScannedHistoryFragment : Fragment() {
         init()
         showListOfResults()
         setSwipeRefreshLayout()
+        onClicks()
         return mView
+    }
+
+    private fun onClicks() {
+        mView.removeAll.setOnClickListener {
+            showRemoveAllScannedResultDialog()
+        }
+    }
+
+    private fun showRemoveAllScannedResultDialog() {
+        AlertDialog.Builder(context, R.style.CustomAlertDialog)
+            .setTitle("Delete All")
+            .setMessage("Are You Really Want To Delete All Record?")
+            .setPositiveButton("Delete") { dialog, which ->
+                clearRecords()
+            }
+            .setNegativeButton("Cancel") { dialog, which ->
+                dialog.cancel()
+            }.show()
+    }
+
+    private fun clearRecords() {
+        when(resultType){
+            ResultListType.ALL_RESULT -> dbHelperI.deleteAllQrScannedResults()
+            ResultListType.FAVOURITE_RESULT -> dbHelperI.deleteAllFavouriteQrScannedResults()
+        }
+        mView.scannedHistoryRecyclerView?.adapter?.notifyDataSetChanged()
+        showAllResults()
     }
 
     private fun setSwipeRefreshLayout() {
@@ -105,11 +134,19 @@ class ScannedHistoryFragment : Fragment() {
     private fun initRecyclerView(listOfQRResults: List<QrResult>) {
       mView.scannedHistoryRecyclerView.layoutManager = LinearLayoutManager(context!!)
         mView.scannedHistoryRecyclerView.adapter = ScannedResultListAdapter(dbHelperI,context!!,listOfQRResults.toMutableList())
+        showRecyclerView()
     }
 
     private fun showEmptyState() {
        mView.scannedHistoryRecyclerView.gone()
        mView.noResultFound.visible()
+       mView.removeAll.gone()
+    }
+
+    private  fun showRecyclerView(){
+        mView.scannedHistoryRecyclerView.visible()
+        mView.noResultFound.gone()
+        mView.removeAll.visible()
     }
 
 }

@@ -5,6 +5,8 @@ import com.example.qrcodescanner.ui.db.entites.QrResult
 import java.util.*
 
 class DBHelper(var qrResultDatabase: QrResultDatabase) :  DBHelperI{
+
+
     override fun addToFavourite(id: Int): Int {
         return qrResultDatabase.getQrDao().addToFavourite(id)
     }
@@ -31,5 +33,17 @@ class DBHelper(var qrResultDatabase: QrResultDatabase) :  DBHelperI{
 
     override fun getAllFavouriteQrScannedResults(): List<QrResult> {
         return qrResultDatabase.getQrDao().getAllFavouriteResults()
+    }
+
+    override fun deleteQrResult(id: Int): Int {
+        return qrResultDatabase.getQrDao().deleteQrResult(id)
+    }
+
+    override fun deleteAllQrScannedResults() {
+        qrResultDatabase.getQrDao().deleteAllScannedResults()
+    }
+
+    override fun deleteAllFavouriteQrScannedResults() {
+         qrResultDatabase.getQrDao().deleteAllFavouriteResults()
     }
 }
